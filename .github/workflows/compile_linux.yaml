@@ -18,12 +18,6 @@ jobs:
           fail-on-cache-miss: true
           key: godot_4_2_2_stable_rev2
 
-      - uses: actions/cache@v4
-        id: cache
-        with:
-          path: extensions/gdcpp
-          key: gdcpp_linux_rev1
-
       - name: Install build dependencies
         run: sudo apt-get install -y scons
 
