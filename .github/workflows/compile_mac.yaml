@@ -18,6 +18,14 @@ jobs:
           fail-on-cache-miss: true
           key: godot_4_2_2_stable_rev2
 
+      - name: Install scons
+        run: brew install scons
+
+      - name: Compile the extension
+        run: |
+          cd extensions
+          scons platform=macos target=template_release
+
       - name: Create templates symlink
         run: |
           mkdir -p "$HOME/Library/Application Support/Godot/export_templates"
