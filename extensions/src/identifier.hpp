@@ -11,28 +11,20 @@ private:
 	String group;
 	String name;
 
-	bool valid = true;
+	bool valid = false;
 
 protected:
 	static void _bind_methods();
 
 public:
 	Identifier();
-	Identifier(String _group, String _name);
 	~Identifier();
 
-	static Identifier from_string(String id_str){
-		String _group = "openchamp";
-    	String _name = id_str;
+	static Identifier* from_string(String _id_string);
+	static Identifier* from_values(String _group, String _name);
 
-		int colon = id_str.find(":");
-		if (colon != -1){
-			_group = id_str.substr(0, colon);
-			_name = id_str.substr(colon + 1);
-		}
-
-		return Identifier{_group, _name};
-	}
+	String get_group() const;
+	String get_name() const;
 };
 
 } //namespace godot

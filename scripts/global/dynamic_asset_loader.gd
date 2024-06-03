@@ -117,7 +117,7 @@ func load_asset(asset_id: Identifier) -> Resource:
 
 
 func load_texture(asset_id: Identifier) -> Texture:
-	var texture_id = Identifier.new(asset_id.group, "textures/" + asset_id.name)
+	var texture_id = Identifier.from_values(asset_id.group, "textures/" + asset_id.name)
 	return load_asset(texture_id) as Texture
 
 
@@ -208,7 +208,7 @@ func _load_textures(pack: String, group: String, texture_subdir: String = "textu
 		else:
 			# load texture
 			var texture_path = path_join(["user://external", pack, group, texture_subdir, texture_name])
-			var texture_id = Identifier.new(group, texture_subdir + "/" + texture_name)
+			var texture_id = Identifier.from_values(group, texture_subdir + "/" + texture_name)
 
 			asset_map[texture_id] = texture_path
 

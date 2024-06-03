@@ -13,3 +13,11 @@ build/
 
 # game install dir
 godot/
+
+# extentions stuff
+**/.sconsign.dblite
+**/*.os
+bin/*.so
+bin/*.dll
+bin/*.framework
+
