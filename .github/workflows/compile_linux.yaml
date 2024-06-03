@@ -58,7 +58,7 @@ jobs:
 
       - name: Create templates symlink
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/4.2.2.stable
+          mkdir -p ~/.local/share/godot/export_templates
           ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
 
       - name: Create the build directory
@@ -138,7 +138,7 @@ jobs:
 
       - name: Create templates symlink
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/4.2.2.stable
+          mkdir -p ~/.local/share/godot/export_templates
           ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
 
       - name: Export Client For Linux aarch64
