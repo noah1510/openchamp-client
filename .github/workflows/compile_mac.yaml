@@ -2,8 +2,8 @@ on:
   workflow_call:
 
 jobs:
-  mac_compile:
-    name: "Compile for MacOS"
+  extension_compile_macos:
+    name: "Compile Extension for MacOS"
     runs-on: "macos-latest"
     steps:
       - uses: actions/checkout@v4
@@ -13,18 +13,45 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: godot
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-          key: godot_4_2_2_stable_rev2
+          path: extension
+          key: extension_cache_macos_4_2_2_stable
 
-      - name: Install scons
+      - name: Install build dependencies
         run: brew install scons
 
       - name: Compile the extension
         run: |
           cd extensions
+          scons platform=macos target=template_debug
           scons platform=macos target=template_release
+          cd ..
+
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_macos
+          path: bin
+
+  export_game_macos:
+    name: "Compile for MacOS"
+    runs-on: "macos-latest"
+    needs: extension_compile_macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: godot
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+          key: godot_4_2_2_stable_rev2
+
+      - name: Retreive extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_macos
+          path: bin
 
       - name: Create templates symlink
         run: |
@@ -34,10 +61,10 @@ jobs:
       - name: Create the build directory
         run: mkdir build
 
-      - name: Compile Client For MacOS
+      - name: Export Client For MacOS
         run: ./godot/Godot.app/Contents/MacOS/Godot --headless --export-release 'Client macOS' project.godot
 
-      - name: Compile Server For MacOS
+      - name: Export Server For MacOS
         run: ./godot/Godot.app/Contents/MacOS/Godot --headless --export-release 'Server macOS' project.godot
 
       - name: Upload build artifacts

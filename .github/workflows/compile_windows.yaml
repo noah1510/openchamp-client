@@ -2,8 +2,8 @@ on:
   workflow_call:
 
 jobs:
-  win64_compile:
-    name: "Compile for Windows 64bit"
+  extension_compile_win64:
+    name: "Compile Extension for Windows 64bit"
     runs-on: "windows-latest"
     steps:
       - uses: actions/checkout@v4
@@ -13,10 +13,45 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
+          path: extension
+          key: extension_cache_win64_4_2_2_stable
+
+      - name: Install build dependencies
+        run: choco install -y scons
+
+      - name: Compile the extension
+        run: |
+          cd extensions
+          scons platform=windows target=template_debug
+          scons platform=windows target=template_release
+          cd ..
+
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_win64
+          path: bin
+
+
+  export_game_win64:
+    name: "Compile for Windows 64bit"
+    runs-on: "windows-latest"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
           path: godot
           enableCrossOsArchive: true
           fail-on-cache-miss: true
           key: godot_4_2_2_stable_rev2
+
+      - name: Retreive extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_win64
+          path: bin
 
       - name: Create the expor templates directory
         run: New-Item -ItemType Directory -Path $env:APPDATA/Godot/export_templates -Force

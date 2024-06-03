@@ -2,8 +2,8 @@ on:
   workflow_call:
 
 jobs:
-  linux_compile:
-    name: "Compile for Linux"
+  extension_compile_linux:
+    name: "Compile Extension for Linux"
     runs-on: "ubuntu-24.04"
     steps:
       - uses: actions/checkout@v4
@@ -13,10 +13,8 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: godot
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-          key: godot_4_2_2_stable_rev2
+          path: extension
+          key: extension_cache_linux_4_2_2_stable
 
       - name: Install build dependencies
         run: |
@@ -24,34 +22,58 @@ jobs:
           sudo rm /etc/apt/sources.list.d/ubuntu.sources
           sudo cp extensions/ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
           sudo cp extensions/ubuntu_noble_x86.sources /etc/apt/sources.list.d/ubuntu_noble_x86.sources
-          sudo apt update
+          sudo apt-get update
           sudo apt-get install -y scons libstdc++-14-dev:arm64
 
       - name: Compile the extension
         run: |
           cd extensions
+          scons platform=linux target=template_debug compiledb=true use_llvm=true arch=amd64
+          scons platform=linux target=template_debug compiledb=true use_llvm=true arch=arm64
           scons platform=linux target=template_release compiledb=true use_llvm=true arch=amd64
           scons platform=linux target=template_release compiledb=true use_llvm=true arch=arm64
           cd ..
 
-      - name: Create templates symlink
-        run: |
-          mkdir -p ~/.local/share/godot/export_templates
-          ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_linux
+          path: bin
+
+  export_game_linux:
+    name: "Compile for Linux"
+    runs-on: "ubuntu-24.04"
+    needs: extension_compile_linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: godot
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+          key: godot_4_2_2_stable_rev2
+
+      - name: Retreive extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux
+          path: bin
 
       - name: Create the build directory
         run: mkdir build
 
-      - name: Compile Client For Linux amd64
+      - name: Export Client For Linux amd64
         run: ./godot/godot_linux --headless --export-release 'Client Linux/X11 amd64' project.godot
 
-      - name: Compile Server For Linux amd64
+      - name: Export Server For Linux amd64
         run: ./godot/godot_linux --headless --export-release 'Server Linux/X11 amd64' project.godot
 
-      - name: Compile Client For Linux aarch64
+      - name: Export Client For Linux aarch64
         run: ./godot/godot_linux --headless --export-release 'Client Linux/X11 aarch64' project.godot
 
-      - name: Compile Server For Linux aarch64
+      - name: Export Server For Linux aarch64
         run: ./godot/godot_linux --headless --export-release 'Server Linux/X11 aarch64' project.godot
 
       - name: Upload build artifacts
