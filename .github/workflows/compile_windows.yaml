@@ -11,7 +11,9 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: extensions
+          path: |
+            extensions/godot-cpp
+            extensions/.sconsign.dblite
           save-always: true
           key: extension_cache_win64_4_2_2_stable
 
@@ -37,7 +39,7 @@ jobs:
 
 
   export_game_win64:
-    name: "Compile for Windows 64bit"
+    name: "Export for Windows 64bit"
     runs-on: "windows-latest"
     needs: extension_compile_win64
     steps:

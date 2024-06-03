@@ -11,9 +11,11 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: extensions
+          path: |
+            extensions/godot-cpp
+            extensions/.sconsign.dblite
           save-always: true
-          key: extension_cache_linux_4_2_2_stable
+          key: extension_cache_linux_amd64_4_2_2_stable
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'
@@ -82,14 +84,18 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
 
       - uses: actions/cache@v4
         id: cache
         with:
-          path: extension
-          key: extension_cache_linux_4_2_2_stable
+          path: |
+            extensions/godot-cpp
+            extensions/.sconsign.dblite
+          key: extension_cache_linux_arm64_4_2_2_stable
+
+      - name: get submodules if cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive
 
       - name: Install build dependencies
         run: |
