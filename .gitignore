@@ -14,7 +14,7 @@ build/
 # game install dir
 godot/
 
-# extentions stuff
+# extensions stuff
 **/.sconsign.dblite
 **/*.os
 bin/*.so
