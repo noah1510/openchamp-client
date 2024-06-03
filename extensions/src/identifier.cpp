@@ -39,7 +39,6 @@ Identifier* Identifier::from_string(String _id_string) {
 Identifier* Identifier::from_values(String _group, String _name) {
 	if (_group == ""){
 		_group = "openchamp";
-	
 	}
 	
 	Identifier* id = memnew(Identifier);

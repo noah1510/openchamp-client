@@ -1,6 +1,6 @@
 #pragma once
 
-#include <godot_cpp/classes/sprite2d.hpp>
+#include <godot_cpp/classes/object.hpp>
 
 namespace godot {
 

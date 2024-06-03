@@ -7,17 +7,20 @@ jobs:
     runs-on: "windows-latest"
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
 
       - uses: actions/cache@v4
         id: cache
         with:
-          path: extension
+          path: extensions
+          save-always: true
           key: extension_cache_win64_4_2_2_stable
 
+      - name: get submodules if cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive
+
       - name: Install build dependencies
-        run: choco install -y scons
+        run: pip install scons
 
       - name: Compile the extension
         run: |
@@ -36,6 +39,7 @@ jobs:
   export_game_win64:
     name: "Compile for Windows 64bit"
     runs-on: "windows-latest"
+    needs: extension_compile_win64
     steps:
       - uses: actions/checkout@v4
 

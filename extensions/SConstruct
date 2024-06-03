@@ -34,7 +34,7 @@ if env["platform"] == "macos":
     )
 else:
     library = env.SharedLibrary(
-        "../bin/openchamp{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        "../bin/libopenchamp{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,
     )
 

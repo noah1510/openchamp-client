@@ -2,48 +2,43 @@ on:
   workflow_call:
 
 jobs:
-  extension_compile_linux:
-    name: "Compile Extension for Linux"
+  extension_compile_linux_amd64:
+    name: "Compile Extension for Linux amd64"
     runs-on: "ubuntu-24.04"
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
 
       - uses: actions/cache@v4
         id: cache
         with:
-          path: extension
+          path: extensions
+          save-always: true
           key: extension_cache_linux_4_2_2_stable
 
+      - name: get submodules if cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive
+
       - name: Install build dependencies
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo rm /etc/apt/sources.list.d/ubuntu.sources
-          sudo cp extensions/ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
-          sudo cp extensions/ubuntu_noble_x86.sources /etc/apt/sources.list.d/ubuntu_noble_x86.sources
-          sudo apt-get update
-          sudo apt-get install -y scons libstdc++-14-dev:arm64
+        run: sudo apt-get install -y scons
 
       - name: Compile the extension
         run: |
           cd extensions
           scons platform=linux target=template_debug compiledb=true use_llvm=true arch=amd64
-          scons platform=linux target=template_debug compiledb=true use_llvm=true arch=arm64
           scons platform=linux target=template_release compiledb=true use_llvm=true arch=amd64
-          scons platform=linux target=template_release compiledb=true use_llvm=true arch=arm64
           cd ..
 
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: extension_linux
+          name: extension_linux_amd64
           path: bin
 
-  export_game_linux:
-    name: "Compile for Linux"
+  export_game_linux_amd64:
+    name: "Export for Linux amd64"
     runs-on: "ubuntu-24.04"
-    needs: extension_compile_linux
+    needs: [ extension_compile_linux_amd64 ]
     steps:
       - uses: actions/checkout@v4
 
@@ -58,8 +53,13 @@ jobs:
       - name: Retreive extension artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_linux
+          name: extension_linux_amd64
           path: bin
+
+      - name: Create templates symlink
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.2.stable
+          ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
 
       - name: Create the build directory
         run: mkdir build
@@ -70,6 +70,77 @@ jobs:
       - name: Export Server For Linux amd64
         run: ./godot/godot_linux --headless --export-release 'Server Linux/X11 amd64' project.godot
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_builds_amd64
+          path: build
+
+  extension_compile_linux_arm64:
+    name: "Compile Extension for Linux arm64"
+    runs-on: "ubuntu-24.04"
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: extension
+          key: extension_cache_linux_4_2_2_stable
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install -y scons 
+          sudo dpkg --add-architecture arm64
+          sudo rm /etc/apt/sources.list.d/ubuntu.sources
+          sudo cp extensions/ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
+          sudo cp extensions/ubuntu_noble_x86.sources /etc/apt/sources.list.d/ubuntu_noble_x86.sources
+          sudo apt-get update
+          sudo apt-get install -y libstdc++-14-dev:arm64
+
+      - name: Compile the extension
+        run: |
+          cd extensions
+          scons platform=linux target=template_debug compiledb=true use_llvm=true arch=arm64
+          scons platform=linux target=template_release compiledb=true use_llvm=true arch=arm64
+          cd ..
+
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_linux_arm64
+          path: bin
+
+  export_game_linux_arm64:
+    name: "Export for Linux arm64"
+    runs-on: "ubuntu-24.04"
+    continue-on-error: true
+    needs: [ extension_compile_linux_arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: godot
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+          key: godot_4_2_2_stable_rev2
+
+      - name: Retreive extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux_arm64
+          path: bin
+
+      - name: Create templates symlink
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.2.stable
+          ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
+
       - name: Export Client For Linux aarch64
         run: ./godot/godot_linux --headless --export-release 'Client Linux/X11 aarch64' project.godot
 
@@ -79,5 +150,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux_builds
+          name: linux_builds_arm64
           path: build
