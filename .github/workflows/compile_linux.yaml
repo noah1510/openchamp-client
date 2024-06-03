@@ -21,7 +21,9 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo dpkg --add-architecture arm64
+          sudo rm /etc/apt/sources.list.d/ubuntu.sources
           sudo cp extensions/ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
+          sudo cp extensions/ubuntu_noble_x86.sources /etc/apt/sources.list.d/ubuntu_noble_x86.sources
           sudo apt update
           sudo apt-get install -y scons libstdc++-14-dev:arm64
 
