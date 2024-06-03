@@ -21,7 +21,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo dpkg --add-architecture arm64
-          sudo cp ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
+          sudo cp extensions/ubuntu_noble_arm.sources /etc/apt/sources.list.d/ubuntu_noble_arm.sources
           sudo apt update
           sudo apt-get install -y scons libstdc++-14-dev:arm64
 
@@ -30,7 +30,7 @@ jobs:
           cd extensions
           scons platform=linux target=template_release compiledb=true use_llvm=true arch=amd64
           scons platform=linux target=template_release compiledb=true use_llvm=true arch=arm64
-
+          cd ..
 
       - name: Create templates symlink
         run: |
