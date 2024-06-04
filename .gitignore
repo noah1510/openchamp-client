@@ -21,3 +21,4 @@ bin/*.so
 bin/*.dll
 bin/*.framework
 extensions/compile_commands.json
+extensions/build*

@@ -15,7 +15,7 @@ jobs:
             extensions/godot-cpp
             extensions/.sconsign.dblite
           save-always: true
-          key: extension_cache_linux_amd64_4_2_2_stable
+          key: extension_cache_linux_amd64_4_3_0_beta1
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'
@@ -26,10 +26,13 @@ jobs:
 
       - name: Compile the extension
         run: |
-          cd extensions
-          scons platform=linux target=template_debug compiledb=true use_llvm=true arch=amd64
-          scons platform=linux target=template_release compiledb=true use_llvm=true arch=amd64
-          cd ..
+          cmake -GNinja -B extensions/build_release extensions -DCMAKE_BUILD_TYPE=Release
+          ninja -C extensions/build
+          ninja -C extensions/build_release install
+
+          cmake -GNinja -B extensions/build_debug extensions -DCMAKE_BUILD_TYPE=Debug
+          ninja -C extensions/build_debug
+          ninja -C extensions/build_debug install
 
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
