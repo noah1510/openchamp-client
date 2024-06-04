@@ -3,8 +3,20 @@ on:
 
 jobs:
   extension_compile_linux_amd64:
-    name: "Compile Extension for Linux amd64"
+    name: "Compile Extension for Linux"
     runs-on: "ubuntu-24.04"
+    strategy:
+      fail-fast: false
+      matrix:
+        build_mode: [ debug, release ]
+        include:
+          - name: amd64
+            script: ./extensions/scripts/compile_native.sh
+            build_dir_base: build
+          - name: aarch64
+            script: ./extensions/scripts/cross_compile_linux_arm.sh
+            build_dir_base: build_aarch64
+
     steps:
       - uses: actions/checkout@v4
 
@@ -13,31 +25,21 @@ jobs:
         with:
           path: |
             extensions/godot-cpp
-            extensions/.sconsign.dblite
+            extensions/${{ matrix.build_dir_base }}_${{ matrix.build_mode }}
           save-always: true
-          key: extension_cache_linux_amd64_4_3_0_beta1
+          key: extension_cache_linux_${{ matrix.name }}_${{ matrix.build_mode }}_4_3_0_beta1
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'
         run: git submodule update --init --recursive
 
-      - name: Install build dependencies
-        run: sudo apt-get install -y scons
-
       - name: Compile the extension
-        run: |
-          cmake -GNinja -B extensions/build_release extensions -DCMAKE_BUILD_TYPE=Release
-          ninja -C extensions/build
-          ninja -C extensions/build_release install
-
-          cmake -GNinja -B extensions/build_debug extensions -DCMAKE_BUILD_TYPE=Debug
-          ninja -C extensions/build_debug
-          ninja -C extensions/build_debug install
+        run: ${{ matrix.script }} ${{ matrix.build_mode }}
 
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: extension_linux_amd64
+          name: extension_linux_${{ matrix.name }}
           path: bin
 
   export_game_linux_amd64:

@@ -15,7 +15,7 @@ jobs:
             extensions/godot-cpp
             extensions/.sconsign.dblite
           save-always: true
-          key: extension_cache_win64_4_2_2_stable
+          key: extension_cache_win64_4_3_0_beta1
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'

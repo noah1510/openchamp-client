@@ -22,3 +22,4 @@ bin/*.dll
 bin/*.framework
 extensions/compile_commands.json
 extensions/build*
+extensions/cross_compile_stuff/linux-aarch64

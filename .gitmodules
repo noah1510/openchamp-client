@@ -1,4 +1,4 @@
 [submodule "extensions/godot-cpp"]
 	path = extensions/godot-cpp
-	branch = 4.2
+	branch = master
 	url = https://github.com/godotengine/godot-cpp

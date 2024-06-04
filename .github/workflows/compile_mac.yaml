@@ -13,9 +13,10 @@ jobs:
         with:
           path: |
             extensions/godot-cpp
-            extensions/.sconsign.dblite
+            extensions/build_debug
+            extensions/build_release
           save-always: true
-          key: extension_cache_macos_4_2_2_stable
+          key: extension_cache_macos_4_3_0_beta1
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'
@@ -25,11 +26,7 @@ jobs:
         run: brew install scons
 
       - name: Compile the extension
-        run: |
-          cd extensions
-          scons platform=macos target=template_debug
-          scons platform=macos target=template_release
-          cd ..
+        run: ./extensions/scripts/compile_native.sh
 
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
