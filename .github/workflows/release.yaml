@@ -11,7 +11,7 @@ jobs:
   
   compile_linux:
     needs: cache_godot
-    uses: ./.github/workflows/compile_linux.yaml
+    uses: ./.github/workflows/compile_linux_amd64.yaml
     secrets: inherit
 
   compile_mac:
