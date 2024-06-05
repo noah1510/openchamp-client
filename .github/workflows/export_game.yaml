@@ -3,32 +3,31 @@ on:
 
 jobs:
   export_game:
-    name: "Export the game"
     env:
       EXPORT_TEMPLATE_VERSION: '4.3.beta1'
     strategy:
       fail-fast: false
       matrix:
+        os: [ ubuntu-24.04, windows-latest, macos-latest ]
         include:
-          - name: ubuntu-amd64
-            runs-on: "ubuntu-24.04"
+          - os: "ubuntu-24.04"
             export_name: "Linux/X11 amd64"
             godot_executable: "godot_linux"
           
-          - name: ubuntu-aarch64
-            runs-on: "ubuntu-24.04"
+          - os: "ubuntu-24.04"
             export_name: "Linux/X11 arm64"
             godot_executable: "godot_linux"
 
-          - name: macos
-            runs-on: "macos-latest"
+          - os: "macos-latest"
             export_name: "macOS"
             godot_executable: "Godot.app/Contents/MacOS/Godot"
 
-          - name: windows
-            runs-on: "windows-latest"
+          - os: "windows-latest"
             export_name: "Windows"
             godot_executable: "godot_win64_console.exe"
+
+    name: "Export Game ${{ matrix.export_name }}"
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -77,5 +76,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: game_export_${{ matrix.name }}
+          name: game_export_${{ matrix.export_name }}
           path: build

@@ -15,13 +15,9 @@ build/
 godot/
 
 # extensions stuff
-**/.sconsign.dblite
-**/*.os
 bin/*.so
 bin/*.dll
 bin/*.framework
-extensions/compile_commands.json
-extensions/build*
 
+extensions/build*
 extensions/cross_compile_stuff/*
-!extensions/cross_compile_stuff/Dockerfile*

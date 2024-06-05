@@ -3,30 +3,30 @@ on:
 
 jobs:
   compile_extensions:
-    name: "Compile Extension for Linux"
     strategy:
       fail-fast: false
       matrix:
         build_mode: [ debug, release ]
-        include:
-          - name: ubuntu_amd64
-            runs-on: "ubuntu-24.04"
-            extra_args: ""
-          
-          - name: ubuntu_aarch64
-            runs-on: "ubuntu-24.04"
-            extra_args: "--target_arch aarch64"
+        os: [ ubuntu-24.04, windows-latest, macos-latest ]
+        arch: [ native, aarch64 ]
+        exclude:
+          - os: windows-latest
+            arch: aarch64
+          - os: macos-latest
+            arch: aarch64
 
-          - name: windows
-            runs-on: "windows-latest"
-            extra_args: ""
-
-          - name: macos
-            runs-on: "macos-latest"
-            extra_args: ""
+    name: "extension ${{ matrix.os }} ${{ matrix.build_mode }} ${{ matrix.arch }}"
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: install ninja
+        run: pip install ninja
 
       - uses: actions/cache@v4
         id: cache
@@ -35,7 +35,7 @@ jobs:
             extensions/godot-cpp
             extensions/build
           save-always: true
-          key: extension_cache_${{ matrix.name }}_${{ matrix.build_mode }}_4_3_0_beta1
+          key: extension_cache_${{ matrix.os }}_${{ matrix.build_mode }}_${{ matrix.arch }}_4_3_0_beta1
 
       - name: get submodules if cache miss
         if: steps.cache.outputs.cache-hit != 'true'
@@ -48,12 +48,12 @@ jobs:
           path: .
 
       - name: Compile the extension
-        run: python ./extensions/scripts/compile.py ${{ matrix.extra_args }} --build_dir extensions/build --build_mode ${{ matrix.build_mode }} --api_file extension_api.json
+        run: python ./extensions/scripts/compile.py --target_arch=${{ matrix.arch }} --build_dir=extensions/build --mode=${{ matrix.build_mode }} --api_file=./extension_api.json
 
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: extension_${{ matrix.name }}_${{ matrix.build_mode }}
+          name: extension_${{ matrix.os }}_${{ matrix.build_mode }}_${{ matrix.arch }}
           path: bin
 
   combine_extension_artifacts:
@@ -64,7 +64,7 @@ jobs:
       - name: Retrieve extension artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_*
+          pattern: extension_*
           path: bin
 
       - name: Publish extension artifacts

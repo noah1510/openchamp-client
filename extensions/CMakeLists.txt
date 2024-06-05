@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(openchamp)
+project(openchamp LANGUAGES CXX)
 
 set(SOURCES
     src/register_types.cpp
@@ -19,6 +19,8 @@ string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} SYSTEM_PROCESSOR_LOWER)
 
 set_target_properties(openchamp PROPERTIES OUTPUT_NAME openchamp.${SYSTEM_NAME_LOWER}.template_${BUILD_TYPE_LOWER}.${SYSTEM_PROCESSOR_LOWER})
 target_link_libraries(openchamp godot-cpp)
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 install(TARGETS openchamp DESTINATION ${CMAKE_SOURCE_DIR}/../bin)
 

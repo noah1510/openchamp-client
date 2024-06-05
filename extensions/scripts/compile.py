@@ -6,27 +6,29 @@ import stat
 
 from typing import List
 
+docker_image_map = {
+    "x86_64": "x64",
+    "x86": "x86",
+    "aarch64": "arm64",
+    "riscv64": "riscv64"
+}
+
 
 def setup_docker_image(target_arch: str, project_dir: str) -> str:
     extensions_dir = os.path.join(project_dir, "extensions")
-    docker_file = os.path.join(extensions_dir, "cross_compile_stuff", "Dockerfile.{}".format(target_arch))
-    docker_image = "openchamp_{}_cross".format(target_arch)
+    docker_image_name = "dockcross/linux-{}".format(docker_image_map[target_arch])
 
-    # Create the compile docker image
-    subprocess.call(
-        ["docker", "build", "-t", docker_image, "-f", docker_file, "."],
-        cwd=project_dir
-    )
+    os.makedirs(os.path.join(extensions_dir, "cross_compile_stuff"), exist_ok=True)
+    compiler_script = os.path.join(extensions_dir, "cross_compile_stuff", "{}.sh".format(target_arch))
 
     # run the docker image and capture the output
     docker_result = subprocess.run(
-        ["docker", "run", docker_image],
+        ["docker", "run", docker_image_name],
         cwd=project_dir,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
     )
 
-    compiler_script = os.path.join(extensions_dir, "cross_compile_stuff", "{}.sh".format(target_arch))
     with open(compiler_script, "w") as f:
         f.write(docker_result.stdout.decode("utf-8"))
 
@@ -84,6 +86,9 @@ if __name__ == "__main__":
     setup_command: List[str] = []
     compile_command: List[str] = []
 
+    if args["target_arch"] == "native":
+        args["target_arch"] = host_arch
+
     if host_arch == args["target_arch"]:
         print("Building natively for the host architecture ({})".format(host_arch))
 
@@ -114,17 +119,23 @@ if __name__ == "__main__":
         "extensions"
     ])
 
-    subprocess.call(setup_command, cwd=project_dir)
+    if subprocess.call(setup_command, cwd=project_dir) != 0:
+        print("Failed to run the setup command")
+        exit(1)
 
     # Compile the source file
     compile_command.extend([
         "-C", build_dir
     ])
 
-    subprocess.call(compile_command, cwd=project_dir)
+    if subprocess.call(compile_command, cwd=project_dir) != 0:
+        print("Failed to run the compile command")
+        exit(1)
 
     # install the build output
     compile_command.append("install")
 
-    subprocess.call(compile_command, cwd=project_dir)
+    if subprocess.call(compile_command, cwd=project_dir) != 0:
+        print("Failed to install the build output")
+        exit(1)
     

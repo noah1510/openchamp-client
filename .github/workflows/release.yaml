@@ -11,7 +11,7 @@ jobs:
   
   compile_extensions:
     needs: cache_godot
-    uses: ./.github/workflows/compile_extensions.yaml
+    uses: ./.github/workflows/compile_extension.yaml
     secrets: inherit
 
   export_game:
@@ -48,7 +48,7 @@ jobs:
       - name: Download the export artifacts
         uses: actions/download-artifact@v4
         with:
-          name: game_export_*
+          pattern: game_export_*
           path: build
 
       - name: Create the release
