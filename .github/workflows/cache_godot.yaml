@@ -51,5 +51,11 @@ jobs:
           mkdir godot/export_templates
           mv templates godot/export_templates/4.2.2.stable
 
-      
-        
+      - name: generate api bindings
+        run: godot/godot_linux --dump-extension-api extension_api.json
+
+      - name: create an artifact with the api bindings
+        uses: actions/upload-artifact@v2
+        with:
+          name: extension_api
+          path: extension_api.json

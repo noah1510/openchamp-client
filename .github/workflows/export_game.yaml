@@ -39,13 +39,48 @@ jobs:
       - name: Upload extension artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: extension_linux_${{ matrix.name }}
+          name: extension_linux_${{ matrix.name }}_${{ matrix.build_mode }}
+          path: bin
+
+  combine_extension_binaries:
+    name: "Combine Extension Binaries"
+    runs-on: "ubuntu-24.04"
+    needs: extension_compile_linux_amd64
+    steps:
+      - name: Retreive extension artifacts (release amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux_amd64_release
+          path: bin
+      
+      - name: Retreive extension artifacts (release aarch64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux_aarch64_release
+          path: bin
+
+      - name: Retreive extension artifacts (debug amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux_amd64_debug
+          path: bin
+
+      - name: Retreive extension artifacts (debug aarch64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_linux_aarch64_debug
+          path: bin
+
+      - name: Publish extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_linux
           path: bin
 
   export_game_linux_amd64:
     name: "Export for Linux amd64"
     runs-on: "ubuntu-24.04"
-    needs: [ extension_compile_linux_amd64 ]
+    needs: combine_extension_binaries
     steps:
       - uses: actions/checkout@v4
 
@@ -60,7 +95,7 @@ jobs:
       - name: Retreive extension artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_linux_amd64
+          name: extension_linux
           path: bin
 
       - name: Create templates symlink

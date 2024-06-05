@@ -1,0 +1,121 @@
+on:
+  workflow_call:
+
+jobs:
+  compile_extensions:
+    name: "Compile Extension for Linux"
+    strategy:
+      fail-fast: false
+      matrix:
+        build_mode: [ debug, release ]
+        include:
+          - name: ubuntu_amd64
+            runs-on: "ubuntu-24.04"
+            extra_args: ""
+          
+          - name: ubuntu_aarch64
+            runs-on: "ubuntu-24.04"
+            extra_args: "--target_arch aarch64"
+
+          - name: windows
+            runs-on: "windows-latest"
+            extra_args: ""
+
+          - name: macos
+            runs-on: "macos-latest"
+            extra_args: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            extensions/godot-cpp
+            extensions/build
+          save-always: true
+          key: extension_cache_${{ matrix.name }}_${{ matrix.build_mode }}_4_3_0_beta1
+
+      - name: get submodules if cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive
+
+      - name: get the api artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_api
+          path: .
+
+      - name: Compile the extension
+        run: python ./extensions/scripts/compile.py ${{ matrix.extra_args }} --build_dir extensions/build --build_mode ${{ matrix.build_mode }} --api_file extension_api.json
+
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension_${{ matrix.name }}_${{ matrix.build_mode }}
+          path: bin
+
+  combine_extension_artifacts:
+    name: "Combine Extension Binaries"
+    runs-on: "ubuntu-24.04"
+    needs: compile_extensions
+    steps:
+      - name: Retreive extension artifacts (debug amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_ubuntu_amd64_debug
+          path: bin
+
+      - name: Retreive extension artifacts (release amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_ubuntu_amd64_release
+          path: bin
+      
+
+      - name: Retreive extension artifacts (debug aarch64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_ubuntu_aarch64_debug
+          path: bin
+
+      - name: Retreive extension artifacts (release aarch64)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_ubuntu_aarch64_release
+          path: bin
+
+
+      - name: Retreive extension artifacts (debug windows)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_windows_debug
+          path: bin
+
+      - name: Retreive extension artifacts (release windows)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_windows_release
+          path: bin
+
+
+      - name: Retreive extension artifacts (debug macos)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_macos_debug
+          path: bin
+
+      - name: Retreive extension artifacts (release macos)
+        uses: actions/download-artifact@v4
+        with:
+          name: extension_macos_release
+          path: bin
+
+
+      - name: Publish extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: bin
+
