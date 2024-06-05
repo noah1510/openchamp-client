@@ -44,7 +44,7 @@ jobs:
       - name: get the api artifact
         uses: actions/download-artifact@v4
         with:
-          name: extension_api
+          name: gd_extension_api
           path: .
 
       - name: Compile the extension
@@ -54,7 +54,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: extension_${{ matrix.os }}_${{ matrix.build_mode }}_${{ matrix.arch }}
-          path: bin
+          path: |
+            bin/*.dll
+            bin/*.dll.a
+            bin/*.dylib
+            bin/**.framework
+            bin/*.so
 
   combine_extension_artifacts:
     name: "Combine Extension Binaries"
@@ -65,7 +70,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: extension_*
-          path: bin
+          path: _bin
+
+      - name: Combine extension artifacts
+        run: |
+          mkdir -p bin
+          cp _bin/*/* bin
 
       - name: Publish extension artifacts
         uses: actions/upload-artifact@v4

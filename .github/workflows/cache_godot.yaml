@@ -60,5 +60,5 @@ jobs:
       - name: create an artifact with the api bindings
         uses: actions/upload-artifact@v4
         with:
-          name: extension_api
+          name: gd_extension_api
           path: extension_api.json

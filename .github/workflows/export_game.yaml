@@ -8,25 +8,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, windows-latest, macos-latest ]
+        export_type:
+          - macOS
+          - Windows
+          - "Linux/X11 amd64"
+          - "Linux/X11 aarch64"
         include:
-          - os: "ubuntu-24.04"
-            export_name: "Linux/X11 amd64"
-            godot_executable: "godot_linux"
-          
-          - os: "ubuntu-24.04"
-            export_name: "Linux/X11 arm64"
-            godot_executable: "godot_linux"
-
-          - os: "macos-latest"
-            export_name: "macOS"
+          - export_type: macOS
+            os: macos-latest
             godot_executable: "Godot.app/Contents/MacOS/Godot"
+            name: "macos"
 
-          - os: "windows-latest"
-            export_name: "Windows"
+          - export_type: Windows
+            os: windows-latest
             godot_executable: "godot_win64_console.exe"
+            name: "windows"
 
-    name: "Export Game ${{ matrix.export_name }}"
+          - export_type: "Linux/X11 amd64"
+            os: ubuntu-24.04
+            godot_executable: "godot_linux"
+            name: "linux_amd64"
+
+          - export_type: "Linux/X11 aarch64"
+            os: ubuntu-24.04
+            godot_executable: "godot_linux"
+            name: "linux_aarch64"
+
+    name: "Export Game ${{ matrix.export_type }}"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -68,13 +76,13 @@ jobs:
         run: mkdir build
 
       - name: Export Client For Linux amd64
-        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Client ${{ matrix.export_name }}' project.godot
+        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Client ${{ matrix.export_type }}' project.godot
 
       - name: Export Server For Linux amd64
-        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Server ${{ matrix.export_name }}' project.godot
+        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Server ${{ matrix.export_type }}' project.godot
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: game_export_${{ matrix.export_name }}
+          name: game_export_${{ matrix.name }}
           path: build
