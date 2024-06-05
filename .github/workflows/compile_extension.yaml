@@ -61,57 +61,11 @@ jobs:
     runs-on: "ubuntu-24.04"
     needs: compile_extensions
     steps:
-      - name: Retreive extension artifacts (debug amd64)
+      - name: Retrieve extension artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_ubuntu_amd64_debug
+          name: extension_*
           path: bin
-
-      - name: Retreive extension artifacts (release amd64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_ubuntu_amd64_release
-          path: bin
-      
-
-      - name: Retreive extension artifacts (debug aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_ubuntu_aarch64_debug
-          path: bin
-
-      - name: Retreive extension artifacts (release aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_ubuntu_aarch64_release
-          path: bin
-
-
-      - name: Retreive extension artifacts (debug windows)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_windows_debug
-          path: bin
-
-      - name: Retreive extension artifacts (release windows)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_windows_release
-          path: bin
-
-
-      - name: Retreive extension artifacts (debug macos)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_macos_debug
-          path: bin
-
-      - name: Retreive extension artifacts (release macos)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_macos_release
-          path: bin
-
 
       - name: Publish extension artifacts
         uses: actions/upload-artifact@v4

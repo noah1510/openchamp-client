@@ -2,85 +2,34 @@ on:
   workflow_call:
 
 jobs:
-  extension_compile_linux_amd64:
-    name: "Compile Extension for Linux"
-    runs-on: "ubuntu-24.04"
+  export_game:
+    name: "Export the game"
+    env:
+      EXPORT_TEMPLATE_VERSION: '4.3.beta1'
     strategy:
       fail-fast: false
       matrix:
-        build_mode: [ debug, release ]
         include:
-          - name: amd64
-            script: ./extensions/scripts/compile_native.sh
-            build_dir_base: build
-          - name: aarch64
-            script: ./extensions/scripts/cross_compile_linux_arm.sh
-            build_dir_base: build_aarch64
+          - name: ubuntu-amd64
+            runs-on: "ubuntu-24.04"
+            export_name: "Linux/X11 amd64"
+            godot_executable: "godot_linux"
+          
+          - name: ubuntu-aarch64
+            runs-on: "ubuntu-24.04"
+            export_name: "Linux/X11 arm64"
+            godot_executable: "godot_linux"
 
-    steps:
-      - uses: actions/checkout@v4
+          - name: macos
+            runs-on: "macos-latest"
+            export_name: "macOS"
+            godot_executable: "Godot.app/Contents/MacOS/Godot"
 
-      - uses: actions/cache@v4
-        id: cache
-        with:
-          path: |
-            extensions/godot-cpp
-            extensions/${{ matrix.build_dir_base }}_${{ matrix.build_mode }}
-          save-always: true
-          key: extension_cache_linux_${{ matrix.name }}_${{ matrix.build_mode }}_4_3_0_beta1
+          - name: windows
+            runs-on: "windows-latest"
+            export_name: "Windows"
+            godot_executable: "godot_win64_console.exe"
 
-      - name: get submodules if cache miss
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: git submodule update --init --recursive
-
-      - name: Compile the extension
-        run: ${{ matrix.script }} ${{ matrix.build_mode }}
-
-      - name: Upload extension artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension_linux_${{ matrix.name }}_${{ matrix.build_mode }}
-          path: bin
-
-  combine_extension_binaries:
-    name: "Combine Extension Binaries"
-    runs-on: "ubuntu-24.04"
-    needs: extension_compile_linux_amd64
-    steps:
-      - name: Retreive extension artifacts (release amd64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_linux_amd64_release
-          path: bin
-      
-      - name: Retreive extension artifacts (release aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_linux_aarch64_release
-          path: bin
-
-      - name: Retreive extension artifacts (debug amd64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_linux_amd64_debug
-          path: bin
-
-      - name: Retreive extension artifacts (debug aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_linux_aarch64_debug
-          path: bin
-
-      - name: Publish extension artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension_linux
-          path: bin
-
-  export_game_linux_amd64:
-    name: "Export for Linux amd64"
-    runs-on: "ubuntu-24.04"
-    needs: combine_extension_binaries
     steps:
       - uses: actions/checkout@v4
 
@@ -90,30 +39,43 @@ jobs:
           path: godot
           enableCrossOsArchive: true
           fail-on-cache-miss: true
-          key: godot_4_2_2_stable_rev2
+          key: godot_4_3_0_beta1_rev1
 
-      - name: Retreive extension artifacts
+      - name: Retreive extensions artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_linux
+          name: extensions
           path: bin
 
-      - name: Create templates symlink
+      - name: Create templates symlink (linux)
+        if: runner.os == 'Linux'
         run: |
           mkdir -p ~/.local/share/godot/export_templates
-          ln -s $(pwd)/godot/export_templates/4.2.2.stable ~/.local/share/godot/export_templates/4.2.2.stable
+          ln -s $(pwd)/godot/export_templates/${{ env.EXPORT_TEMPLATE_VERSION }} ~/.local/share/godot/export_templates/${{ env.EXPORT_TEMPLATE_VERSION }}
+
+      - name: Create templates symlink (macos)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "$HOME/Library/Application Support/Godot/export_templates"
+          ln -s "$(pwd)/godot/export_templates/${{ env.EXPORT_TEMPLATE_VERSION }}" "$HOME/Library/Application Support/Godot/export_templates/${{ env.EXPORT_TEMPLATE_VERSION }}"
+
+      - name: Move the export templates (windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Path $env:APPDATA/Godot/export_templates -Force
+          Move-Item -Path godot/export_templates/${{ env.EXPORT_TEMPLATE_VERSION }} -Destination $env:APPDATA/Godot/export_templates/
 
       - name: Create the build directory
         run: mkdir build
 
       - name: Export Client For Linux amd64
-        run: ./godot/godot_linux --headless --export-release 'Client Linux/X11 amd64' project.godot
+        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Client ${{ matrix.export_name }}' project.godot
 
       - name: Export Server For Linux amd64
-        run: ./godot/godot_linux --headless --export-release 'Server Linux/X11 amd64' project.godot
+        run: ./godot/${{ matrix.godot_executable }} --headless --export-release 'Server ${{ matrix.export_name }}' project.godot
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux_builds_amd64
+          name: game_export_${{ matrix.name }}
           path: build

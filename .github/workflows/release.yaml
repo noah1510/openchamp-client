@@ -9,23 +9,18 @@ jobs:
     uses: ./.github/workflows/cache_godot.yaml
     secrets: inherit
   
-  compile_linux:
+  compile_extensions:
     needs: cache_godot
-    uses: ./.github/workflows/compile_linux_amd64.yaml
+    uses: ./.github/workflows/compile_extensions.yaml
     secrets: inherit
 
-  compile_mac:
-    needs: cache_godot
-    uses: ./.github/workflows/compile_mac.yaml
-    secrets: inherit
-
-  compile_windows:
-    needs: cache_godot
-    uses: ./.github/workflows/compile_windows.yaml
+  export_game:
+    needs: [ cache_godot, compile_extensions ]
+    uses: ./.github/workflows/export_game.yaml
     secrets: inherit
 
   create_release:
-    needs: [ compile_linux, compile_mac, compile_windows]
+    needs: [ export_game ]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -41,44 +36,20 @@ jobs:
           DEFAULT_BUMP: patch
           TAG_CONTEXT: branch
 
-      - name: Download linux build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: linux_builds_amd64
-          path: build
-
-      - name: Download mac build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: mac_builds
-          path: build
-
-      - name: Download windows build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: win64_builds
-          path: build
-
       - name: Download extension artifacts
         uses: actions/download-artifact@v4
         with:
-          name: extension_linux_amd64
-          path: bin
-
-      - name: Download extension artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_macos
-          path: bin
-      
-      - name: Download extension artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: extension_win64
+          name: extensions
           path: bin
 
       - name: create an extensions build archive
         run: zip -r extension.zip bin
+
+      - name: Download the export artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: game_export_*
+          path: build
 
       - name: Create the release
         uses: softprops/action-gh-release@v2
